@@ -29,13 +29,14 @@
         android:text="UNDO"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/colorButton" />
-    <com.github.veritas1.verticalslidecolorpicker.VerticalSlideColorPicker
+    <uz.shift.colorpicker.LineColorPicker
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/color_picker"
-        android:layout_width="30dp"
-        android:layout_height="100dp"
-        colorpicker:borderColor="@android:color/black"
-        colorpicker:borderWidth="2dp"
-        colorpicker:colors="@array/default_colors"
+        android:layout_width="24dp"
+        android:layout_height="96dp"
+        app:orientation="vertical"
+        app:colors="@array/default_colors"
+        app:selectedColorIndex="2"
         android:layout_below="@+id/colorButton"
         android:layout_alignEnd="@+id/colorButton" />
 

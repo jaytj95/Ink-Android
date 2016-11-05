@@ -3,6 +3,11 @@ package com.paladin.ink;
 import android.app.WallpaperManager;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -14,23 +19,17 @@ import android.widget.RelativeLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
-import com.github.veritas1.verticalslidecolorpicker.VerticalSlideColorPicker;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.nineoldandroids.animation.Animator;
 
-public class MainActivity extends AppCompatActivity {
-    private static final int ANIM_SPEED = 350;
-    InkView inkView;
+public class MainActivity extends AppCompatActivity implements UnlockFragment.OnUnlockSuccessListener, ClockFragment.OnClockFragmentInteractionListener{
     ImageView background;
+    private CustomViewPager mPager;
+    private PagerAdapter mPagerAdapter;
 
-    RelativeLayout drawingView;
-    RelativeLayout lockView;
-
-    Button colorButton;
-    Button undoButton;
-    Button drawButton;
-
-
-    VerticalSlideColorPicker colorPicker;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,36 +44,7 @@ public class MainActivity extends AppCompatActivity {
         //INITIALIZATION
         setContentView(R.layout.activity_main);
 
-        drawingView = (RelativeLayout) findViewById(R.id.drawingView);
-        lockView = (RelativeLayout) findViewById(R.id.lock_layout);
 
-        colorButton = (Button) findViewById(R.id.colorButton);
-        undoButton = (Button) findViewById(R.id.undoButton);
-        drawButton = (Button) findViewById(R.id.drawButton);
-
-        colorPicker = (VerticalSlideColorPicker) findViewById(R.id.color_picker);
-        colorPicker.setOnColorChangeListener(new VerticalSlideColorPicker.OnColorChangeListener() {
-            @Override
-            public void onColorChange(int i) {
-                colorButton.setBackgroundColor(i);
-                inkView.setColor(i);
-            }
-        });
-
-
-
-        undoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean b = inkView.undo();
-            }
-        });
-        drawButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switchToDraw();
-            }
-        });
 
         final WallpaperManager wallpaperManager = WallpaperManager.getInstance(this);
         final Drawable wallpaperDrawable = wallpaperManager.getDrawable();
@@ -82,33 +52,15 @@ public class MainActivity extends AppCompatActivity {
         background = (ImageView) findViewById(R.id.background);
         background.setImageDrawable(wallpaperDrawable);
 
+        mPager = (CustomViewPager) findViewById(R.id.pager);
+        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
 
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (mFirebaseUser == null) {
 
-        inkView = (InkView) findViewById(R.id.ink);
-        inkView.setColor(getResources().getColor(android.R.color.white));
-        inkView.setMinStrokeWidth(1.5f);
-        inkView.setMaxStrokeWidth(6f);
-
-        inkView.addListener(new InkView.InkListener() {
-            @Override
-            public void onInkClear() {
-
-            }
-
-            @Override
-            public void onInkDraw() {
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorButton);
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorPicker);
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(undoButton);
-            }
-
-            @Override
-            public void onInkUp() {
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorButton);
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorPicker);
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(undoButton);
-            }
-        });
+        }
 
 
     }
@@ -139,55 +91,41 @@ public class MainActivity extends AppCompatActivity {
         android.os.Process.killProcess(android.os.Process.myPid());
     }
 
-
-    private void switchToDraw() {
-        YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                lockView.setVisibility(View.GONE);
-                drawingView.setVisibility(View.VISIBLE);
-                YoYo.with(Techniques.ZoomIn).duration(ANIM_SPEED).playOn(drawingView);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        }).playOn(lockView);
+    @Override
+    public void onSwitchToDraw() {
+        mPager.setPagingEnabled(false);
     }
-    private void switchToLock() {
-        YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
 
+    @Override
+    public void onSwitchToLock() {
+        mPager.setPagingEnabled(true);
+    }
+
+    @Override
+    public void onUnlockSuccess() {
+
+    }
+
+
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            switch (position) {
+                case 0:
+                    return new UnlockFragment();
+                case 1:
+                    return new ClockFragment();
             }
+            return null;
+        }
 
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                drawingView.setVisibility(View.GONE);
-                lockView.setVisibility(View.VISIBLE);
-                YoYo.with(Techniques.ZoomIn).duration(ANIM_SPEED).playOn(lockView);
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        }).playOn(drawingView);
+        @Override
+        public int getCount() {
+            return 2;
+        }
     }
 }
