@@ -10,10 +10,12 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.content.Intent;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
@@ -21,7 +23,13 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.nineoldandroids.animation.Animator;
+
+import java.util.Arrays;
+
+import mehdi.sakout.fancybuttons.FancyButton;
 
 public class MainActivity extends AppCompatActivity implements UnlockFragment.OnUnlockSuccessListener, ClockFragment.OnClockFragmentInteractionListener{
     ImageView background;
@@ -30,6 +38,10 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
+
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference dbRef;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,13 +67,18 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         mPager = (CustomViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(1);
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser == null) {
-
+//            unlockScreen();
+            finish();
+            startActivity(new Intent(this, LoginActivity.class));
+        } else {
+            firebaseDatabase = FirebaseDatabase.getInstance();
+            dbRef = firebaseDatabase.getReference("users");
         }
-
 
     }
 
@@ -102,10 +119,19 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
     }
 
     @Override
+    public void onSwitchToSelect() {
+//        mPager.setPagingEnabled(false);
+    }
+
+    @Override
     public void onUnlockSuccess() {
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    }
 
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fm) {

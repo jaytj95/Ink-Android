@@ -29,6 +29,15 @@
         android:text="UNDO"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/colorButton" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/sendButton"
+        android:text="SEND"
+        android:layout_alignParentBottom="true"
+        android:layout_alignEnd="@+id/color_picker" />
+
     <uz.shift.colorpicker.LineColorPicker
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/color_picker"

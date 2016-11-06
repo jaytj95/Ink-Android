@@ -7,5 +7,6 @@
 
     <include layout="@layout/lock_layout"/>
     <include layout="@layout/drawing_layout"/>
+    <include layout="@layout/select_user_send"/>
 
 </FrameLayout>

@@ -23,6 +23,7 @@
         android:text="Draw!"/>
 
     <ImageView
+        android:id="@+id/receivedImg"
         android:layout_width="240dp"
         android:layout_height="480dp"
         android:scaleType="centerCrop"
