@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:colorpicker="http://schemas.android.com/apk/res-auto"
+    xmlns:fancy="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,29 +15,63 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <Button
+    <mehdi.sakout.fancybuttons.FancyButton
         android:id="@+id/colorButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="COLORS"
+        android:paddingBottom="15dp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingTop="15dp"
+        fancy:fb_borderColor="#FFFFFF"
+        fancy:fb_borderWidth="2dp"
+        fancy:fb_defaultColor="#FF0000"
+        fancy:fb_focusColor="#FF0000"
+        fancy:fb_fontIconResource="&#xf040;"
+        fancy:fb_iconPosition="left"
+        fancy:fb_radius="15dp"
+        fancy:fb_textColor="#FFFFFF"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true" />
 
-    <Button
+    <mehdi.sakout.fancybuttons.FancyButton
+        android:id="@+id/undoButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/undoButton"
-        android:text="UNDO"
+        android:paddingBottom="15dp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingTop="15dp"
+        fancy:fb_borderColor="#FFFFFF"
+        fancy:fb_borderWidth="2dp"
+        fancy:fb_defaultColor="#0000FF"
+        fancy:fb_focusColor="#0000FF"
+        fancy:fb_fontIconResource="&#xf0e2;"
+        fancy:fb_iconPosition="left"
+        fancy:fb_radius="15dp"
+        fancy:fb_textColor="#FFFFFF"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/colorButton" />
 
-    <Button
+    <mehdi.sakout.fancybuttons.FancyButton
+        android:id="@+id/sendButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/sendButton"
-        android:text="SEND"
+        android:paddingBottom="20dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="20dp"
+        fancy:fb_fontIconSize="18sp"
+        fancy:fb_borderColor="#FFFFFF"
+        fancy:fb_borderWidth="2dp"
+        fancy:fb_defaultColor="#0c75ff"
+        fancy:fb_focusColor="#0c75ff"
+        fancy:fb_fontIconResource="&#xf1d8;"
+        fancy:fb_iconPosition="left"
+        fancy:fb_radius="30dp"
+        fancy:fb_textColor="#FFFFFF"
         android:layout_alignParentBottom="true"
-        android:layout_alignEnd="@+id/color_picker" />
+        android:layout_alignParentEnd="true" />
 
     <uz.shift.colorpicker.LineColorPicker
         xmlns:app="http://schemas.android.com/apk/res-auto"

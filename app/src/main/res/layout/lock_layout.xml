@@ -1,40 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:fancy="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/lock_layout">
 
 
-    <DigitalClock
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:textSize="70sp"
-        android:fontFamily="sans-serif-light"
-        android:textColor="#fff"
-        android:layout_marginTop="60dp"
-        android:id="@+id/digitalClock" />
-
-    <Button
-        android:id="@+id/drawButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Draw!"/>
 
     <ImageView
         android:id="@+id/receivedImg"
-        android:layout_width="240dp"
-        android:layout_height="480dp"
-        android:scaleType="centerCrop"
-        android:background="#80000000"
-        android:src="@mipmap/ic_launcher"
-        android:layout_below="@+id/digitalClock"
-        android:layout_alignStart="@+id/digitalClock"
-        android:layout_alignEnd="@+id/digitalClock"
-        android:layout_alignParentBottom="true"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"/>
+
+    <RelativeLayout
+        android:id="@+id/clockLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextClock
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:textSize="70sp"
+            android:fontFamily="sans-serif-light"
+            android:textColor="#fff"
+            android:layout_marginTop="60dp"
+            android:id="@+id/digitalClock" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tuesday, November 20"
+            android:layout_below="@+id/digitalClock"
+            android:gravity="center"
+            android:id="@+id/textDate"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:layout_alignStart="@+id/digitalClock"
+            android:layout_alignEnd="@+id/digitalClock" />
+
+        <mehdi.sakout.fancybuttons.FancyButton
+            android:id="@+id/drawButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:paddingTop="15dp"
+            fancy:fb_borderColor="#FFFFFF"
+            fancy:fb_borderWidth="2dp"
+            fancy:fb_fontIconSize="15sp"
+            fancy:fb_defaultColor="@android:color/transparent"
+            fancy:fb_focusColor="@android:color/transparent"
+            fancy:fb_fontIconResource="&#xf040;"
+            fancy:fb_iconPosition="left"
+            fancy:fb_radius="15dp"
+            fancy:fb_textColor="#FFFFFF"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+
 
 
 

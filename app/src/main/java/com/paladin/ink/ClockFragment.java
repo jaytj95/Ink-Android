@@ -7,17 +7,22 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DigitalClock;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.TwoLineListItem;
 
@@ -43,10 +48,14 @@ import com.nineoldandroids.animation.Animator;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 
+import mehdi.sakout.fancybuttons.FancyButton;
 import uz.shift.colorpicker.LineColorPicker;
 import uz.shift.colorpicker.OnColorChangedListener;
 
@@ -72,17 +81,21 @@ public class ClockFragment extends Fragment {
     RelativeLayout drawingView;
     RelativeLayout lockView;
     RelativeLayout selectUserView;
+    RelativeLayout clockLayout;
 
     ImageView receivedImg;
 
-    Button colorButton;
-    Button undoButton;
-    Button drawButton;
-    Button sendButton;
+    FancyButton colorButton;
+    FancyButton undoButton;
+    FancyButton drawButton;
+    FancyButton sendButton;
     LineColorPicker colorPicker;
 
     FirebaseUser user;
     FirebaseAuth auth;
+
+    TextClock clock;
+    TextView textDate;
 
     FirebaseDatabase firebaseDatabase;
     DatabaseReference dbRef;
@@ -134,7 +147,7 @@ public class ClockFragment extends Fragment {
                         dbRef = null;
                         Log.d("INKLOCK", "Done son");
                         inkView.clear();
-//                        switchToLock();
+                        switchToLock();
 
                     }
                 });
@@ -142,23 +155,28 @@ public class ClockFragment extends Fragment {
         });
         Log.d("INKLOCK", "Sending");
     }
-
+    boolean dismiss = false;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_clock, container, false);
 
+        clock = (TextClock) rootView.findViewById(R.id.digitalClock);
+        textDate = (TextView) rootView.findViewById(R.id.textDate);
+        textDate.setText(Util.getDateString());
+
         photoList = new ArrayList<>();
 
         drawingView = (RelativeLayout) rootView.findViewById(R.id.drawingView);
         lockView = (RelativeLayout) rootView.findViewById(R.id.lock_layout);
         selectUserView = (RelativeLayout) rootView.findViewById(R.id.select_user_send);
+        clockLayout = (RelativeLayout) rootView.findViewById(R.id.clockLayout);
 
-        colorButton = (Button) rootView.findViewById(R.id.colorButton);
-        undoButton = (Button) rootView.findViewById(R.id.undoButton);
-        drawButton = (Button) rootView.findViewById(R.id.drawButton);
-        sendButton = (Button) rootView.findViewById(R.id.sendButton);
+        colorButton = (FancyButton) rootView.findViewById(R.id.colorButton);
+        undoButton = (FancyButton) rootView.findViewById(R.id.undoButton);
+        drawButton = (FancyButton) rootView.findViewById(R.id.drawButton);
+        sendButton = (FancyButton) rootView.findViewById(R.id.sendButton);
 
         firebaseDatabase = FirebaseDatabase.getInstance();
         sendButton.setOnClickListener(new View.OnClickListener() {
@@ -234,6 +252,11 @@ public class ClockFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 boolean b = inkView.undo();
+                if (b) {
+                    undoButton.setBackgroundColor(ContextCompat.getColor(getContext(), android.R.color.holo_blue_bright));
+                } else {
+                    undoButton.setBackgroundColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
+                }
             }
         });
         drawButton.setOnClickListener(new View.OnClickListener() {
@@ -245,11 +268,64 @@ public class ClockFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
+
         receivedImg = (ImageView) rootView.findViewById(R.id.receivedImg);
+        receivedImg.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+
+                }
+                return false;
+            }
+        });
+        receivedImg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(dismiss) {
+                    dismiss = false;
+                    clockLayout.setVisibility(View.VISIBLE);
+                    YoYo.with(Techniques.FadeIn).duration(350).playOn(clockLayout);
+                    photoList.remove(0);
+                    if(photoList.size() > 0) {
+                        picture = photoList.get(0);
+                        Picasso.with(getContext()).load(picture.url).into(receivedImg);
+                    } else {
+                        receivedImg.setImageBitmap(null);
+                    }
+                }
+
+            }
+        });
         receivedImg.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+                YoYo.with(Techniques.FadeOut).duration(350).withListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        clockLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                }).playOn(clockLayout);
                 firebaseDatabase = FirebaseDatabase.getInstance();
+                if(picture == null) {
+                    return false;
+                }
                 DatabaseReference ref = firebaseDatabase.getReference("users")
                         .child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("pics").child(picture.id);
                 ref.removeValue();
@@ -260,14 +336,7 @@ public class ClockFragment extends Fragment {
                 StorageReference picRef = storageRef.child(picName);
                 picRef.delete();
 
-                photoList.remove(0);
-                if(photoList.size() > 0) {
-                    picture = photoList.get(0);
-                    Picasso.with(getContext()).load(picture.url).into(receivedImg);
-                } else {
-                    receivedImg.setImageBitmap(null);
-                }
-
+                dismiss = true;
 
                 return false;
             }
@@ -281,7 +350,6 @@ public class ClockFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 User user = listAdapter.getItem(position);
                 sendToUser(user.getId());
-                switchToLock();
 
             }
         });
@@ -367,6 +435,8 @@ public class ClockFragment extends Fragment {
 
 
     private void switchToSelect() {
+        listAdapter.clear();
+        listAdapter.notifyDataSetChanged();
         YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -469,6 +539,8 @@ public class ClockFragment extends Fragment {
 
             TextView text1 = twoLineListItem.getText1();
             TextView text2 = twoLineListItem.getText2();
+            text1.setTextColor(ContextCompat.getColor(getContext(),android.R.color.white));
+            text2.setTextColor(ContextCompat.getColor(getContext(),android.R.color.white));
 
             text1.setText(user.getName());
             text2.setText(user.getId());
