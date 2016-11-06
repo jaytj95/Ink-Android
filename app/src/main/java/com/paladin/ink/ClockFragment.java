@@ -134,7 +134,7 @@ public class ClockFragment extends Fragment {
                         dbRef = null;
                         Log.d("INKLOCK", "Done son");
                         inkView.clear();
-                        switchToLock();
+//                        switchToLock();
 
                     }
                 });
@@ -272,9 +272,33 @@ public class ClockFragment extends Fragment {
                 return false;
             }
         });
+        getUsersPics();
 
 
+        listView = (ListView) rootView.findViewById(R.id.listview);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                User user = listAdapter.getItem(position);
+                sendToUser(user.getId());
+                switchToLock();
+
+            }
+        });
+        listAdapter = new UserAdapter(getContext(), android.R.layout.simple_list_item_2);
+        listView.setAdapter(listAdapter);
+
+
+        return rootView;
+    }
+
+    private void getUsersPics() {
         //getting user's queued pics
+        if(photoList != null) {
+            photoList.clear();
+        } else {
+            photoList = new ArrayList<>();
+        }
         String currentUserPath = "users/" + user.getUid() + "/pics";
         dbRef = firebaseDatabase.getReference(currentUserPath);
 
@@ -303,22 +327,6 @@ public class ClockFragment extends Fragment {
             }
         };
         dbRef.addValueEventListener(postListener);
-
-        listView = (ListView) rootView.findViewById(R.id.listview);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                User user = listAdapter.getItem(position);
-                sendToUser(user.getId());
-                switchToLock();
-
-            }
-        });
-        listAdapter = new UserAdapter(getContext(), android.R.layout.simple_list_item_2);
-        listView.setAdapter(listAdapter);
-
-
-        return rootView;
     }
 
 
@@ -399,6 +407,7 @@ public class ClockFragment extends Fragment {
                 drawingView.setVisibility(View.VISIBLE);
                 YoYo.with(Techniques.ZoomIn).duration(ANIM_SPEED).playOn(drawingView);
                 mListener.onSwitchToDraw();
+                getUsersPics();
             }
 
             @Override
