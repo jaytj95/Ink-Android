@@ -1,6 +1,7 @@
 package com.paladin.ink;
 
 import android.app.WallpaperManager;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v4.app.Fragment;
@@ -69,15 +70,17 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         mPager.setAdapter(mPagerAdapter);
         mPager.setCurrentItem(1);
 
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        if (mFirebaseUser == null) {
+        SharedPreferences prefs = getSharedPreferences("inklocksharedprefs", MODE_PRIVATE);
+
+//        mFirebaseAuth = FirebaseAuth.getInstance();
+//        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (!prefs.contains("auth_key")) {
 //            unlockScreen();
             finish();
             startActivity(new Intent(this, LoginActivity.class));
         } else {
-            firebaseDatabase = FirebaseDatabase.getInstance();
-            dbRef = firebaseDatabase.getReference("users");
+//            firebaseDatabase = FirebaseDatabase.getInstance();
+//            dbRef = firebaseDatabase.getReference("users");
         }
 
     }

@@ -97,62 +97,10 @@ public class ClockFragment extends Fragment {
     TextClock clock;
     TextView textDate;
 
-    FirebaseDatabase firebaseDatabase;
-    DatabaseReference dbRef;
-    FirebaseStorage firebaseStorage;
-    StorageReference storageRef;
-
     ListView listView;
     UserAdapter listAdapter;
 
     private void sendToUser(final String uid) {
-        Log.d("INKLOCK", "OK");
-        String sendUserPath = "users/" + uid + "/pics";
-        firebaseStorage = FirebaseStorage.getInstance();
-        storageRef = firebaseStorage.getReferenceFromUrl("gs://inklockscreen.appspot.com");
-        dbRef = firebaseDatabase.getReference(sendUserPath);
-
-        final long nextInc = System.currentTimeMillis();
-        ////////////////
-        ////////////////
-        ////////////////
-        Log.d("INKLOCK", "Ready");
-
-        String imgPath = uid + System.currentTimeMillis() + ".jpg";
-        StorageReference imgRef = storageRef.child(imgPath);
-
-        StorageMetadata metadata = new StorageMetadata.Builder()
-                .setContentType("image/jpg")
-                .build();
-        Bitmap bitmap = inkView.getBitmap();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
-        byte[] data = baos.toByteArray();
-
-        UploadTask uploadTask = imgRef.putBytes(data, metadata);
-//        dbRef.removeEventListener(this);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                dbRef.child(nextInc + "").setValue(downloadUrl.toString(), new DatabaseReference.CompletionListener() {
-                    @Override
-                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                        dbRef = null;
-                        Log.d("INKLOCK", "Done son");
-                        inkView.clear();
-                        switchToLock();
-
-                    }
-                });
-            }
-        });
         Log.d("INKLOCK", "Sending");
     }
     boolean dismiss = false;
@@ -178,33 +126,10 @@ public class ClockFragment extends Fragment {
         drawButton = (FancyButton) rootView.findViewById(R.id.drawButton);
         sendButton = (FancyButton) rootView.findViewById(R.id.sendButton);
 
-        firebaseDatabase = FirebaseDatabase.getInstance();
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 switchToSelect();
-
-                //get list of users
-                dbRef = firebaseDatabase.getReference("users/");
-                ValueEventListener valListener = new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for(DataSnapshot snap : dataSnapshot.getChildren()) {
-                            User user = new User(snap.getKey(), snap.child("email").getValue(String.class));
-                            Log.d("INKLOCK", user.toString());
-                            listAdapter.add(user);
-                        }
-                        dbRef.removeEventListener(this);
-                        listAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                };
-                dbRef.addValueEventListener(valListener);
-
 
             }
         });
@@ -322,26 +247,11 @@ public class ClockFragment extends Fragment {
 
                     }
                 }).playOn(clockLayout);
-                firebaseDatabase = FirebaseDatabase.getInstance();
-                if(picture == null) {
-                    return false;
-                }
-                DatabaseReference ref = firebaseDatabase.getReference("users")
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("pics").child(picture.id);
-                ref.removeValue();
-
-                firebaseStorage = FirebaseStorage.getInstance();
-                storageRef = firebaseStorage.getReferenceFromUrl("gs://inklockscreen.appspot.com");
-                String picName = picture.url.substring(picture.url.indexOf("o/") + 2, picture.url.indexOf('?'));
-                StorageReference picRef = storageRef.child(picName);
-                picRef.delete();
-
                 dismiss = true;
 
                 return false;
             }
         });
-        getUsersPics();
 
 
         listView = (ListView) rootView.findViewById(R.id.listview);
@@ -361,40 +271,7 @@ public class ClockFragment extends Fragment {
     }
 
     private void getUsersPics() {
-        //getting user's queued pics
-        if(photoList != null) {
-            photoList.clear();
-        } else {
-            photoList = new ArrayList<>();
-        }
-        String currentUserPath = "users/" + user.getUid() + "/pics";
-        dbRef = firebaseDatabase.getReference(currentUserPath);
 
-        ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot snap : dataSnapshot.getChildren()) {
-                    Log.d("INKLOCK", " " + snap.getValue(String.class));
-                    Photo p = new Photo();
-                    p.id = snap.getKey();
-                    p.url = snap.getValue(String.class);
-                    photoList.add(p);
-                }
-                if(photoList.size() > 0) {
-                    picture = photoList.get(0);
-                    Picasso.with(getActivity()).load(picture.url).into(receivedImg);
-                }
-                dbRef.removeEventListener(this);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Getting Post failed, log a message
-                Log.w("INKLOCK", "loadPost:onCancelled", databaseError.toException());
-                // ...
-            }
-        };
-        dbRef.addValueEventListener(postListener);
     }
 
 

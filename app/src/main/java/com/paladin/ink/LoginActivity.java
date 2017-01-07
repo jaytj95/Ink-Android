@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -24,17 +25,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import mehdi.sakout.fancybuttons.FancyButton;
+import shem.com.materiallogin.DefaultLoginView;
+import shem.com.materiallogin.DefaultRegisterView;
+import shem.com.materiallogin.MaterialLoginView;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "INKLOGIN" ;
     ImageView background;
-    // Firebase instance variables
-    private FirebaseAuth mFirebaseAuth;
-    FancyButton emailButtonLogin, emailButtonSignup;
-    EditText usernameField, passwordField;
-
-    FirebaseDatabase firebaseDatabase;
-    DatabaseReference dbRef;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -52,93 +49,68 @@ public class LoginActivity extends AppCompatActivity {
         background = (ImageView) findViewById(R.id.background);
         background.setImageDrawable(wallpaperDrawable);
 
-        usernameField = (EditText) findViewById(R.id.email);
-        passwordField = (EditText) findViewById(R.id.password);
-
-
-        emailButtonLogin = (FancyButton) findViewById(R.id.btn_email_login);
-        emailButtonLogin.setOnClickListener(new View.OnClickListener() {
+        final MaterialLoginView login = (MaterialLoginView) findViewById(R.id.login);
+        ((DefaultLoginView)login.getLoginView()).setListener(new DefaultLoginView.DefaultLoginViewListener() {
             @Override
-            public void onClick(View v) {
-                Log.d(TAG, "LOGIN");
-                String user = usernameField.getText().toString();
-                String pass = passwordField.getText().toString();
-                Api.loginUser(user, pass, LoginActivity.this, new OnCompleteListener<AuthResult>() {
+            public void onLogin(TextInputLayout loginUser, TextInputLayout loginPass) {
+                String user = loginUser.getEditText().getText().toString();
+                String pass = loginPass.getEditText().getText().toString();
+                Api.loginUser(getApplicationContext(), user, pass, new Api.OnApiResult() {
                     @Override
-                    public void onComplete(Task<AuthResult> task) {
-                        Log.d(TAG, "login:onComplete:" + task.isSuccessful());
-
-                        mFirebaseAuth = FirebaseAuth.getInstance();
-                        FirebaseUser mFirebaseUser = mFirebaseAuth.getCurrentUser();
-
-                        firebaseDatabase = FirebaseDatabase.getInstance();
-                        dbRef = firebaseDatabase.getReference("users");
-
-//                        dbRef.child(mFirebaseUser.getUid()).child("pics").setValue(1, new DatabaseReference.CompletionListener() {
-//                            @Override
-//                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-//                                Log.d(TAG, "ADDED VAL");
-//                            }
-//                        });
-
-
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, ":'(",
-                                    Toast.LENGTH_SHORT).show();
-                        } else {
-                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                    public void onActionComplete(int status) {
+                        switch(status) {
+                            case 0:
+                                //success
+                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                finish();
+                                break;
+                            case 1:
+                                Toast.makeText(getApplicationContext(), "Incorrect Username/Password", Toast.LENGTH_SHORT).show();
+                                break;
+                            case 2:
+                                Toast.makeText(getApplicationContext(), "An unexpected error occured", Toast.LENGTH_SHORT).show();
+                                break;
+                            default:
+                                Toast.makeText(getApplicationContext(), "Default Code", Toast.LENGTH_SHORT);
                         }
-
                     }
                 });
             }
         });
 
-        emailButtonSignup = (FancyButton) findViewById(R.id.btn_email_signup);
-        emailButtonSignup.setOnClickListener(new View.OnClickListener() {
+        ((DefaultRegisterView)login.getRegisterView()).setListener(new DefaultRegisterView.DefaultRegisterViewListener() {
             @Override
-            public void onClick(View v) {
-                Log.d(TAG, "SIGN UP");
-                final String user = usernameField.getText().toString();
-                String pass = passwordField.getText().toString();
-                Api.signUpUser(user, pass, LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(Task<AuthResult> task) {
-                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-                        mFirebaseAuth = FirebaseAuth.getInstance();
-
-
-
-                        FirebaseDatabase firebaseDatabase;
-                        DatabaseReference dbRef;
-                        firebaseDatabase = FirebaseDatabase.getInstance();
-                        dbRef = firebaseDatabase.getReference("users");
-
-                        firebaseDatabase = FirebaseDatabase.getInstance();
-                        dbRef = firebaseDatabase.getReference("users");
-                        dbRef.child(task.getResult().getUser().getUid()).child("email").setValue(user);
-
-
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, ":'(",
-                                    Toast.LENGTH_SHORT).show();
-                        } else {
-                            finish();
-                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+            public void onRegister(TextInputLayout registerUser, TextInputLayout registerPass, TextInputLayout registerPassRep) {
+                String user = registerUser.getEditText().getText().toString();
+                String pass = registerPass.getEditText().getText().toString();
+                String passRep = registerPassRep.getEditText().getText().toString();
+                if(!pass.equals(passRep)) {
+                    Toast.makeText(getApplicationContext(), "Passwords do not match!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Api.signUpUser(getApplicationContext(), user, pass, new Api.OnApiResult() {
+                        @Override
+                        public void onActionComplete(int status) {
+                            switch(status) {
+                                case 0:
+                                    //success
+                                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                    finish();
+                                    break;
+                                case 1:
+                                    Toast.makeText(getApplicationContext(), "Username already exists", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case 2:
+                                    Toast.makeText(getApplicationContext(), "An unexpected error occured", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    Toast.makeText(getApplicationContext(), "Default Code", Toast.LENGTH_SHORT);
+                            }
                         }
+                    });
+                }
 
-                    }
-                });
             }
         });
-
-
     }
 
 }
