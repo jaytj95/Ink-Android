@@ -215,12 +215,19 @@ public class ClockFragment extends Fragment {
                     dismiss = false;
                     clockLayout.setVisibility(View.VISIBLE);
                     YoYo.with(Techniques.FadeIn).duration(350).playOn(clockLayout);
-                    photoList.remove(0);
+                    if(!photoList.isEmpty()) {
+                        Picture picture = photoList.get(0);
+                        photoList.remove(0);
+                    }
                     if(photoList.size() > 0) {
                         picture = photoList.get(0);
                         Picasso.with(getContext()).load(picture.getUrl()).into(receivedImg);
                     } else {
                         receivedImg.setImageBitmap(null);
+                    }
+                    //delete pic after viewing
+                    if(picture != null) {
+                        inkApi.deletePicture(picture.getId());
                     }
                 }
 
@@ -279,7 +286,9 @@ public class ClockFragment extends Fragment {
             @Override
             public void onPendingPicsLoaded(ArrayList<Picture> pictures) {
                 photoList = pictures;
-                Picasso.with(getActivity()).load(photoList.get(0).getUrl()).into(receivedImg);
+                if(!photoList.isEmpty()) {
+                    Picasso.with(getActivity()).load(photoList.get(0).getUrl()).into(receivedImg);
+                }
             }
         });
     }

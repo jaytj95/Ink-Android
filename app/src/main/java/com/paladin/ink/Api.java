@@ -62,6 +62,11 @@ public class Api {
         requestQueue.add(jsonObjectRequest);
     }
 
+    public void deletePicture(String picId) {
+        String url = API_ENDPOINT + "viewed/" + picId;
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, null, null);
+        requestQueue.add(req);
+    }
     public static void signUpUser(final Context c, String username, String pass, final OnApiResult listener) {
         String url = API_ENDPOINT + "register";
         JSONObject params = new JSONObject();
