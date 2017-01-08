@@ -71,15 +71,7 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
             finish();
             startActivity(new Intent(this, LoginActivity.class));
         } else {
-            String userId = prefs.getString("auth_key", null);
-            assert userId != null;
-            inkApi = new Api(getApplicationContext(), userId);
-            inkApi.getPendingPics(new Api.OnPendingPicsLoaded() {
-                @Override
-                public void onPendingPicsLoaded(String[] pictures) {
-                    Picasso.with(getApplicationContext()).load(pictures[0]).into(background);
-                }
-            });
+
         }
 
     }

@@ -2,6 +2,7 @@ package com.paladin.ink;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,6 +49,7 @@ import com.nineoldandroids.animation.Animator;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -68,8 +70,8 @@ import uz.shift.colorpicker.OnColorChangedListener;
 public class ClockFragment extends Fragment {
     private static final int ANIM_SPEED = 350;
 
-    Photo picture;
-    ArrayList<Photo> photoList;
+    Picture picture;
+    ArrayList<Picture> photoList;
 
     private OnClockFragmentInteractionListener mListener;
 
@@ -91,14 +93,14 @@ public class ClockFragment extends Fragment {
     FancyButton sendButton;
     LineColorPicker colorPicker;
 
-    FirebaseUser user;
-    FirebaseAuth auth;
-
     TextClock clock;
     TextView textDate;
 
     ListView listView;
     UserAdapter listAdapter;
+    String userId;
+    Api inkApi;
+    String[] pendingPics;
 
     private void sendToUser(final String uid) {
         Log.d("INKLOCK", "Sending");
@@ -107,6 +109,10 @@ public class ClockFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        SharedPreferences preferences = getActivity().getSharedPreferences("inklocksharedprefs", Context.MODE_PRIVATE);
+        userId = preferences.getString("auth_key", null);
+        assert userId != null;
+        inkApi = new Api(getContext(), userId);
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_clock, container, false);
 
@@ -191,9 +197,6 @@ public class ClockFragment extends Fragment {
             }
         });
 
-        auth = FirebaseAuth.getInstance();
-        user = auth.getCurrentUser();
-
         receivedImg = (ImageView) rootView.findViewById(R.id.receivedImg);
         receivedImg.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -215,7 +218,7 @@ public class ClockFragment extends Fragment {
                     photoList.remove(0);
                     if(photoList.size() > 0) {
                         picture = photoList.get(0);
-                        Picasso.with(getContext()).load(picture.url).into(receivedImg);
+                        Picasso.with(getContext()).load(picture.getUrl()).into(receivedImg);
                     } else {
                         receivedImg.setImageBitmap(null);
                     }
@@ -266,12 +269,19 @@ public class ClockFragment extends Fragment {
         listAdapter = new UserAdapter(getContext(), android.R.layout.simple_list_item_2);
         listView.setAdapter(listAdapter);
 
+        getUsersPics();
 
         return rootView;
     }
 
     private void getUsersPics() {
-
+        inkApi.getPendingPics(new Api.OnPendingPicsLoaded() {
+            @Override
+            public void onPendingPicsLoaded(ArrayList<Picture> pictures) {
+                photoList = pictures;
+                Picasso.with(getActivity()).load(photoList.get(0).getUrl()).into(receivedImg);
+            }
+        });
     }
 
 
@@ -430,9 +440,5 @@ public class ClockFragment extends Fragment {
         public UserAdapter(Context context, int resource) {
             super(context, resource);
         }
-    }
-
-    public class Photo {
-        String id, url;
     }
 }

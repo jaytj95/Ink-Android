@@ -40,17 +40,18 @@ public class Api {
             public void onResponse(JSONObject response) {
                 Log.d("INKANDROID", "Number of pending pics: " + response.length());
                 Iterator<String> keys = response.keys();
-                ArrayList<String> list = new ArrayList<>();
+                ArrayList<Picture> list = new ArrayList<>();
                 while (keys.hasNext()) {
                     try {
                         String key = (String) keys.next();
                         JSONObject pic = response.getJSONObject(key);
-                        list.add(pic.getString("photoUrl"));
+                        Picture p = new Picture(key, pic.getString("photoUrl"));
+                        list.add(p);
                     } catch(JSONException e) {
                         e.printStackTrace();
                     }
                 }
-                listener.onPendingPicsLoaded(list.toArray(new String[list.size()]));
+                listener.onPendingPicsLoaded(list);
             }
         }, new Response.ErrorListener() {
             @Override
@@ -142,7 +143,7 @@ public class Api {
         void onActionComplete(int status);
     }
     public interface OnPendingPicsLoaded {
-        void onPendingPicsLoaded(String[] pictures);
+        void onPendingPicsLoaded(ArrayList<Picture> pictures);
     }
 
 }
