@@ -27,6 +27,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.nineoldandroids.animation.Animator;
+import com.squareup.picasso.Picasso;
 
 import java.util.Arrays;
 
@@ -37,12 +38,7 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
     private CustomViewPager mPager;
     private PagerAdapter mPagerAdapter;
 
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseUser mFirebaseUser;
-
-    private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference dbRef;
-
+    Api inkApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,16 +67,19 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         mPager.setCurrentItem(1);
 
         SharedPreferences prefs = getSharedPreferences("inklocksharedprefs", MODE_PRIVATE);
-
-//        mFirebaseAuth = FirebaseAuth.getInstance();
-//        mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (!prefs.contains("auth_key")) {
-//            unlockScreen();
             finish();
             startActivity(new Intent(this, LoginActivity.class));
         } else {
-//            firebaseDatabase = FirebaseDatabase.getInstance();
-//            dbRef = firebaseDatabase.getReference("users");
+            String userId = prefs.getString("auth_key", null);
+            assert userId != null;
+            inkApi = new Api(getApplicationContext(), userId);
+            inkApi.getPendingPics(new Api.OnPendingPicsLoaded() {
+                @Override
+                public void onPendingPicsLoaded(String[] pictures) {
+                    Picasso.with(getApplicationContext()).load(pictures[0]).into(background);
+                }
+            });
         }
 
     }

@@ -1,11 +1,8 @@
 package com.paladin.ink;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -13,12 +10,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -28,6 +25,41 @@ import static android.content.Context.MODE_PRIVATE;
 public class Api {
 //    private static final String API_ENDPOINT = "http://localhost:3000/api/";
     private static final String API_ENDPOINT = "https://serene-headland-71291.herokuapp.com/api/";
+    private String USER_ID;
+    private RequestQueue requestQueue;
+
+    public Api(Context c, String userId) {
+        this.USER_ID = userId;
+        requestQueue = Volley.newRequestQueue(c);
+    }
+
+    public void getPendingPics(final OnPendingPicsLoaded listener) {
+        String url = API_ENDPOINT + "photos/" + USER_ID;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d("INKANDROID", "Number of pending pics: " + response.length());
+                Iterator<String> keys = response.keys();
+                ArrayList<String> list = new ArrayList<>();
+                while (keys.hasNext()) {
+                    try {
+                        String key = (String) keys.next();
+                        JSONObject pic = response.getJSONObject(key);
+                        list.add(pic.getString("photoUrl"));
+                    } catch(JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                listener.onPendingPicsLoaded(list.toArray(new String[list.size()]));
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
 
     public static void signUpUser(final Context c, String username, String pass, final OnApiResult listener) {
         String url = API_ENDPOINT + "register";
@@ -106,8 +138,11 @@ public class Api {
         queue.add(jsonObjectRequest);
     }
 
-    public static interface OnApiResult {
-        public void onActionComplete(int status);
+    public interface OnApiResult {
+        void onActionComplete(int status);
+    }
+    public interface OnPendingPicsLoaded {
+        void onPendingPicsLoaded(String[] pictures);
     }
 
 }
