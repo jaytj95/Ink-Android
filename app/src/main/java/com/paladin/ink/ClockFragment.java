@@ -28,6 +28,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextClock;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
 import com.daimajia.androidanimations.library.Techniques;
@@ -84,6 +85,9 @@ public class ClockFragment extends Fragment {
     public ClockFragment() {
         // Required empty public constructor
     }
+
+    private float mDownX;
+    private float mDownY;
 
     InkView inkView;
     RelativeLayout drawingView;
@@ -201,71 +205,98 @@ public class ClockFragment extends Fragment {
             }
         });
 
+
+        final GestureDetector gdt = new GestureDetector(new GestureListener());
         receivedImg = (ImageView) rootView.findViewById(R.id.receivedImg);
         receivedImg.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch(event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-
-                }
-                return false;
-            }
-        });
-        receivedImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(dismiss) {
+                if(event.getAction() == MotionEvent.ACTION_UP && dismiss) {
+                    receivedImg.clearAnimation();
                     dismiss = false;
                     clockLayout.setVisibility(View.VISIBLE);
                     YoYo.with(Techniques.FadeIn).duration(350).playOn(clockLayout);
-//                    if(!photoList.isEmpty()) {
-//                        Picture picture = photoList.get(0);
-//                        photoList.remove(0);
-//                    }
                     if(photoList.size() > 0) {
                         picture = photoList.get(0);
                         Picasso.with(getContext()).load(picture.getUrl()).into(receivedImg);
+                        photoList.remove(0);
                     } else {
                         receivedImg.setImageBitmap(null);
+                        picture = null;
                     }
                     //delete pic after viewing
                     if(picture != null) {
                         inkApi.deletePicture(picture.getId());
                     }
+                    Toast.makeText(getActivity(), "UP AFTER VIEW", Toast.LENGTH_SHORT).show();
+                } else {
+                    gdt.onTouchEvent(event);
                 }
-
+                return true;
             }
         });
-        receivedImg.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                YoYo.with(Techniques.FadeOut).duration(350).withListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        clockLayout.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                }).playOn(clockLayout);
-                dismiss = true;
-
-                return false;
-            }
-        });
+//        receivedImg.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                switch(event.getAction()) {
+//                    case MotionEvent.ACTION_DOWN:
+//
+//                }
+//                return false;
+//            }
+//        });
+//        receivedImg.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if(dismiss) {
+//                    dismiss = false;
+//                    clockLayout.setVisibility(View.VISIBLE);
+//                    YoYo.with(Techniques.FadeIn).duration(350).playOn(clockLayout);
+//                    if(photoList.size() > 0) {
+//                        picture = photoList.get(0);
+//                        Picasso.with(getContext()).load(picture.getUrl()).into(receivedImg);
+//                        photoList.remove(0);
+//                    } else {
+//                        receivedImg.setImageBitmap(null);
+//                        picture = null;
+//                    }
+//                    //delete pic after viewing
+//                    if(picture != null) {
+//                        inkApi.deletePicture(picture.getId());
+//                    }
+//                }
+//
+//            }
+//        });
+//        receivedImg.setOnLongClickListener(new View.OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View v) {
+//                YoYo.with(Techniques.FadeOut).duration(350).withListener(new Animator.AnimatorListener() {
+//                    @Override
+//                    public void onAnimationStart(Animator animation) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onAnimationEnd(Animator animation) {
+//                        clockLayout.setVisibility(View.GONE);
+//                    }
+//
+//                    @Override
+//                    public void onAnimationCancel(Animator animation) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onAnimationRepeat(Animator animation) {
+//
+//                    }
+//                }).playOn(clockLayout);
+//                dismiss = true;
+//
+//                return false;
+//            }
+//        });
 
 
         listView = (ListView) rootView.findViewById(R.id.listview);
@@ -469,6 +500,66 @@ public class ClockFragment extends Fragment {
 
         public UserAdapter(Context context, int resource) {
             super(context, resource);
+        }
+    }
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        private static final int SWIPE_MIN_DISTANCE = 120;
+        private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            YoYo.with(Techniques.FadeOut).duration(350).withListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        clockLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                }).playOn(clockLayout);
+                dismiss = true;
+                Toast.makeText(getActivity(), "LONG PRESS", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            boolean didFling = false;
+            if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                didFling = true;
+
+//                return false; // Right to left
+            }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                didFling = true;
+//                return false; // Left to right
+            }
+
+            if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                didFling = true;
+//                return false; // Bottom to top
+            }  else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                didFling = true;
+//                return false; // Top to bottom
+            }
+            if(didFling) {
+                //unlock action
+                Toast.makeText(getActivity(), "FLING", Toast.LENGTH_SHORT).show();
+            }
+            return false;
         }
     }
 }
