@@ -47,6 +47,7 @@ dependencies {
         transitive = true;
     }
     compile 'com.android.volley:volley:1.0.0'
+    compile 'com.rm:freedrawview:1.0.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

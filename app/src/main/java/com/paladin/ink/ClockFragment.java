@@ -50,6 +50,8 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.nineoldandroids.animation.Animator;
+import com.rm.freedraw.FreeDrawView;
+import com.rm.freedraw.PathDrawnListener;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -89,7 +91,8 @@ public class ClockFragment extends Fragment {
     private float mDownX;
     private float mDownY;
 
-    InkView inkView;
+//    InkView inkView;
+    FreeDrawView inkView;
     RelativeLayout drawingView;
     RelativeLayout lockView;
     RelativeLayout selectUserView;
@@ -153,49 +156,53 @@ public class ClockFragment extends Fragment {
             @Override
             public void onColorChanged(int i) {
                 colorButton.setBackgroundColor(i);
-                inkView.setColor(i);
+                inkView.setPaintColor(i);
             }
         });
 
 
 
-        inkView = (InkView) rootView.findViewById(R.id.ink);
-        inkView.setColor(colorPicker.getColor());
-        inkView.setMinStrokeWidth(1.5f);
-        inkView.setMaxStrokeWidth(6f);
-
-        inkView.addListener(new InkView.InkListener() {
-            @Override
-            public void onInkClear() {
-
-            }
-
-            @Override
-            public void onInkDraw() {
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorButton);
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorPicker);
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(undoButton);
-                YoYo.with(Techniques.FadeOut).duration(350).playOn(sendButton);
-            }
-
-            @Override
-            public void onInkUp() {
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorButton);
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorPicker);
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(undoButton);
-                YoYo.with(Techniques.FadeIn).duration(350).playOn(sendButton);
-            }
-        });
+        inkView = (FreeDrawView) rootView.findViewById(R.id.ink);
+        inkView.setPaintColor(colorPicker.getColor());
+        inkView.setPaintWidthDp(2.5f);
+//        inkView.setOnPathDrawnListener(new PathDrawnListener() {
+//            @Override
+//            public void onNewPathDrawn() {
+//
+//            }
+//        });
+//        inkView.addListener(new InkView.InkListener() {
+//            @Override
+//            public void onInkClear() {
+//
+//            }
+//
+//            @Override
+//            public void onInkDraw() {
+//                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorButton);
+//                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorPicker);
+//                YoYo.with(Techniques.FadeOut).duration(350).playOn(undoButton);
+//                YoYo.with(Techniques.FadeOut).duration(350).playOn(sendButton);
+//            }
+//
+//            @Override
+//            public void onInkUp() {
+//                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorButton);
+//                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorPicker);
+//                YoYo.with(Techniques.FadeIn).duration(350).playOn(undoButton);
+//                YoYo.with(Techniques.FadeIn).duration(350).playOn(sendButton);
+//            }
+//        });
 
         undoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean b = inkView.undo();
-                if (b) {
-                    undoButton.setBackgroundColor(ContextCompat.getColor(getContext(), android.R.color.holo_blue_bright));
-                } else {
-                    undoButton.setBackgroundColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
-                }
+                inkView.undoLast();
+//                if (b) {
+//                    undoButton.setBackgroundColor(ContextCompat.getColor(getContext(), android.R.color.holo_blue_bright));
+//                } else {
+//                    undoButton.setBackgroundColor(ContextCompat.getColor(getContext(), android.R.color.darker_gray));
+//                }
             }
         });
         drawButton.setOnClickListener(new View.OnClickListener() {
@@ -222,11 +229,12 @@ public class ClockFragment extends Fragment {
                         photoList.remove(0);
                     } else {
                         receivedImg.setImageBitmap(null);
-                        picture = null;
                     }
                     //delete pic after viewing
                     if(picture != null) {
+                        Log.d("INKLOCK", "Deleting " + picture.getId());
                         inkApi.deletePicture(picture.getId());
+                        picture = null;
                     }
                     Toast.makeText(getActivity(), "UP AFTER VIEW", Toast.LENGTH_SHORT).show();
                 } else {
@@ -321,7 +329,18 @@ public class ClockFragment extends Fragment {
 
     private void sendToUser(final String uid) {
         Log.d("INKLOCK", "Sending");
-        Bitmap bitmap = inkView.getBitmap();
+        Bitmap bitmap = null;
+//        inkView.getDrawScreenshot(new FreeDrawView.DrawCreatorListener() {
+//            @Override
+//            public void onDrawCreated(Bitmap draw) {
+//
+//            }
+//
+//            @Override
+//            public void onDrawCreationError() {
+//
+//            }
+//        });
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
         byte[] data = baos.toByteArray();
@@ -332,14 +351,17 @@ public class ClockFragment extends Fragment {
 
     }
 
+
     private void getUsersPics() {
         inkApi.getPendingPics(new Api.OnPendingPicsLoaded() {
             @Override
             public void onPendingPicsLoaded(ArrayList<Picture> pictures) {
                 photoList = pictures;
                 if(!photoList.isEmpty()) {
-                    Log.d("INKLOCK", photoList.get(0).getId());
-                    Picasso.with(getActivity()).load(photoList.get(0).getUrl()).into(receivedImg);
+                    picture = photoList.get(0);
+                    Log.d("INKLOCK", picture.getId());
+                    Picasso.with(getActivity()).load(picture.getUrl()).into(receivedImg);
+                    photoList.remove(0);
                 }
             }
         });
