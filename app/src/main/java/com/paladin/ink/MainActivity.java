@@ -136,16 +136,16 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    return new UnlockFragment();
-                case 1:
                     return new ClockFragment();
+//                case 1:
+//                    return new ClockFragment();
             }
             return null;
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 1;
         }
     }
 }

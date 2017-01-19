@@ -33,6 +33,32 @@ public class Api {
         requestQueue = Volley.newRequestQueue(c);
     }
 
+    public String getUserId() {
+        return USER_ID;
+    }
+
+    public void sendPicture(String fromId, String toId, String image64, OnPictureSent listener) {
+        String url = API_ENDPOINT + "send";
+        JSONObject param = new JSONObject();
+        try {
+            param.put("fromId", fromId);
+            param.put("toId", toId);
+            param.put("image64", image64);
+        } catch (JSONException e) {}
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, param, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+
+    }
     public void getPendingPics(final OnPendingPicsLoaded listener) {
         String url = API_ENDPOINT + "photos/" + USER_ID;
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
@@ -63,6 +89,7 @@ public class Api {
     }
 
     public void deletePicture(String picId) {
+        Log.d("INKLOCK", "removing " + picId);
         String url = API_ENDPOINT + "viewed/" + picId;
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, null, null);
         requestQueue.add(req);
@@ -119,6 +146,7 @@ public class Api {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, params, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
+                Log.d("INKLOCK", response.toString());
                 if(response.length() != 0) {
                     String authKey = null;
                     try {
@@ -149,6 +177,9 @@ public class Api {
     }
     public interface OnPendingPicsLoaded {
         void onPendingPicsLoaded(ArrayList<Picture> pictures);
+    }
+    public interface OnPictureSent {
+        void onPictureSent(boolean success);
     }
 
 }

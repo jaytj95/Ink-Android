@@ -2,6 +2,7 @@ package com.paladin.ink;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -9,7 +10,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Base64;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -47,6 +50,9 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.nineoldandroids.animation.Animator;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Array;
@@ -102,9 +108,6 @@ public class ClockFragment extends Fragment {
     Api inkApi;
     String[] pendingPics;
 
-    private void sendToUser(final String uid) {
-        Log.d("INKLOCK", "Sending");
-    }
     boolean dismiss = false;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -112,6 +115,7 @@ public class ClockFragment extends Fragment {
         SharedPreferences preferences = getActivity().getSharedPreferences("inklocksharedprefs", Context.MODE_PRIVATE);
         userId = preferences.getString("auth_key", null);
         assert userId != null;
+        Log.d("INKLOCK", "Logged in as: " + userId);
         inkApi = new Api(getContext(), userId);
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_clock, container, false);
@@ -215,10 +219,10 @@ public class ClockFragment extends Fragment {
                     dismiss = false;
                     clockLayout.setVisibility(View.VISIBLE);
                     YoYo.with(Techniques.FadeIn).duration(350).playOn(clockLayout);
-                    if(!photoList.isEmpty()) {
-                        Picture picture = photoList.get(0);
-                        photoList.remove(0);
-                    }
+//                    if(!photoList.isEmpty()) {
+//                        Picture picture = photoList.get(0);
+//                        photoList.remove(0);
+//                    }
                     if(photoList.size() > 0) {
                         picture = photoList.get(0);
                         Picasso.with(getContext()).load(picture.getUrl()).into(receivedImg);
@@ -270,15 +274,31 @@ public class ClockFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 User user = listAdapter.getItem(position);
                 sendToUser(user.getId());
+                Intent i = new Intent();
 
             }
         });
         listAdapter = new UserAdapter(getContext(), android.R.layout.simple_list_item_2);
+        User user = new User("58706219c798bb01c62d9c10", "jaytj95");
+        listAdapter.add(user);
         listView.setAdapter(listAdapter);
 
         getUsersPics();
 
         return rootView;
+    }
+
+    private void sendToUser(final String uid) {
+        Log.d("INKLOCK", "Sending");
+        Bitmap bitmap = inkView.getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
+        byte[] data = baos.toByteArray();
+        String encoded = Base64.encodeToString(data, Base64.DEFAULT);
+
+
+//        inkApi.sendPicture(userId, uid, encoded, new );
+
     }
 
     private void getUsersPics() {
@@ -287,6 +307,7 @@ public class ClockFragment extends Fragment {
             public void onPendingPicsLoaded(ArrayList<Picture> pictures) {
                 photoList = pictures;
                 if(!photoList.isEmpty()) {
+                    Log.d("INKLOCK", photoList.get(0).getId());
                     Picasso.with(getActivity()).load(photoList.get(0).getUrl()).into(receivedImg);
                 }
             }
@@ -331,8 +352,8 @@ public class ClockFragment extends Fragment {
 
 
     private void switchToSelect() {
-        listAdapter.clear();
-        listAdapter.notifyDataSetChanged();
+//        listAdapter.clear();
+//        listAdapter.notifyDataSetChanged();
         YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
