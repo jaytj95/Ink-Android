@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
+import com.amnix.materiallockview.MaterialLockView;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -50,8 +51,8 @@ import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.nineoldandroids.animation.Animator;
-import com.rm.freedraw.FreeDrawView;
-import com.rm.freedraw.PathDrawnListener;
+import com.rm.freedrawview.FreeDrawView;
+import com.rm.freedrawview.PathDrawnListener;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -59,11 +60,11 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Array;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 import mehdi.sakout.fancybuttons.FancyButton;
@@ -81,6 +82,8 @@ public class ClockFragment extends Fragment {
 
     Picture picture;
     ArrayList<Picture> photoList;
+    enum Mode {DRAW, CLOCK, LOCK, SEND};
+    private Mode mode;
 
     private OnClockFragmentInteractionListener mListener;
 
@@ -115,10 +118,13 @@ public class ClockFragment extends Fragment {
     Api inkApi;
     String[] pendingPics;
 
+    MaterialLockView patternView;
+
     boolean dismiss = false;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        mode = Mode.CLOCK;
         SharedPreferences preferences = getActivity().getSharedPreferences("inklocksharedprefs", Context.MODE_PRIVATE);
         userId = preferences.getString("auth_key", null);
         assert userId != null;
@@ -126,6 +132,28 @@ public class ClockFragment extends Fragment {
         inkApi = new Api(getContext(), userId);
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_clock, container, false);
+
+        patternView = (MaterialLockView) rootView.findViewById(R.id.pattern);
+        patternView.setOnPatternListener(new MaterialLockView.OnPatternListener() {
+            @Override
+            public void onPatternDetected(List<MaterialLockView.Cell> pattern, String SimplePattern) {
+                Log.d("INKLOCK", SimplePattern);
+                //should find a way to store a password originally.
+                //right now, checking for typical Android password.
+                if (!SimplePattern.equals("24589")) {
+                    patternView.clearPattern();
+                } else {
+                    patternView.setDisplayMode(MaterialLockView.DisplayMode.Correct);
+                    getActivity().finish();
+                }
+                super.onPatternDetected(pattern, SimplePattern);
+            }
+
+            @Override
+            public void onPatternStart() {
+                super.onPatternStart();
+            }
+        });
 
         clock = (TextClock) rootView.findViewById(R.id.digitalClock);
         textDate = (TextView) rootView.findViewById(R.id.textDate);
@@ -165,6 +193,24 @@ public class ClockFragment extends Fragment {
         inkView = (FreeDrawView) rootView.findViewById(R.id.ink);
         inkView.setPaintColor(colorPicker.getColor());
         inkView.setPaintWidthDp(2.5f);
+        inkView.setBackground(null);
+        inkView.setOnPathDrawnListener(new PathDrawnListener() {
+            @Override
+            public void onNewPathDrawn() {
+                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorButton);
+                YoYo.with(Techniques.FadeIn).duration(350).playOn(colorPicker);
+                YoYo.with(Techniques.FadeIn).duration(350).playOn(undoButton);
+                YoYo.with(Techniques.FadeIn).duration(350).playOn(sendButton);
+            }
+
+            @Override
+            public void onPathStart() {
+                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorButton);
+                YoYo.with(Techniques.FadeOut).duration(350).playOn(colorPicker);
+                YoYo.with(Techniques.FadeOut).duration(350).playOn(undoButton);
+                YoYo.with(Techniques.FadeOut).duration(350).playOn(sendButton);
+            }
+        });
 //        inkView.setOnPathDrawnListener(new PathDrawnListener() {
 //            @Override
 //            public void onNewPathDrawn() {
@@ -329,25 +375,22 @@ public class ClockFragment extends Fragment {
 
     private void sendToUser(final String uid) {
         Log.d("INKLOCK", "Sending");
-        Bitmap bitmap = null;
-//        inkView.getDrawScreenshot(new FreeDrawView.DrawCreatorListener() {
-//            @Override
-//            public void onDrawCreated(Bitmap draw) {
-//
-//            }
-//
-//            @Override
-//            public void onDrawCreationError() {
-//
-//            }
-//        });
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
-        byte[] data = baos.toByteArray();
-        String encoded = Base64.encodeToString(data, Base64.DEFAULT);
+        inkView.getDrawScreenshot(new FreeDrawView.DrawCreatorListener() {
+            @Override
+            public void onDrawCreated(Bitmap bitmap) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
+                byte[] data = baos.toByteArray();
+                String encoded = Base64.encodeToString(data, Base64.DEFAULT);
 
+//                inkApi.sendPicture(userId, uid, encoded, new );
+            }
 
-//        inkApi.sendPicture(userId, uid, encoded, new );
+            @Override
+            public void onDrawCreationError() {
+
+            }
+        });
 
     }
 
@@ -400,11 +443,15 @@ public class ClockFragment extends Fragment {
         void onSwitchToDraw();
         void onSwitchToLock();
         void onSwitchToSelect();
+        void onSwitchToClock();
     }
 
+    private void switchToClock() {
 
+    }
 
     private void switchToSelect() {
+        mode = Mode.SEND;
 //        listAdapter.clear();
 //        listAdapter.notifyDataSetChanged();
         YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
@@ -435,7 +482,8 @@ public class ClockFragment extends Fragment {
 
 
     private void switchToDraw() {
-        YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
+        mode = Mode.DRAW;
+        YoYo.with(Techniques.FadeOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
 
@@ -445,7 +493,7 @@ public class ClockFragment extends Fragment {
             public void onAnimationEnd(Animator animation) {
                 lockView.setVisibility(View.GONE);
                 drawingView.setVisibility(View.VISIBLE);
-                YoYo.with(Techniques.ZoomIn).duration(ANIM_SPEED).playOn(drawingView);
+                YoYo.with(Techniques.FadeIn).duration(ANIM_SPEED).playOn(drawingView);
                 mListener.onSwitchToDraw();
                 getUsersPics();
             }
@@ -462,6 +510,7 @@ public class ClockFragment extends Fragment {
         }).playOn(lockView);
     }
     private void switchToLock() {
+        mode = Mode.LOCK;
         YoYo.with(Techniques.ZoomOut).duration(ANIM_SPEED).withListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -487,42 +536,6 @@ public class ClockFragment extends Fragment {
 
             }
         }).playOn(drawingView);
-    }
-
-    private class UserAdapter extends ArrayAdapter<User> {
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View rootView = convertView;
-
-            User user = getItem(position);
-
-            TwoLineListItem twoLineListItem;
-
-            if (convertView == null) {
-                LayoutInflater inflater = (LayoutInflater) getContext()
-                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                twoLineListItem = (TwoLineListItem) inflater.inflate(
-                        android.R.layout.simple_list_item_2, null);
-            } else {
-                twoLineListItem = (TwoLineListItem) convertView;
-            }
-
-            TextView text1 = twoLineListItem.getText1();
-            TextView text2 = twoLineListItem.getText2();
-            text1.setTextColor(ContextCompat.getColor(getContext(),android.R.color.white));
-            text2.setTextColor(ContextCompat.getColor(getContext(),android.R.color.white));
-
-            text1.setText(user.getName());
-            text2.setText(user.getId());
-
-            return twoLineListItem;
-
-//            return rootView;
-        }
-
-        public UserAdapter(Context context, int resource) {
-            super(context, resource);
-        }
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -579,7 +592,9 @@ public class ClockFragment extends Fragment {
             }
             if(didFling) {
                 //unlock action
-                Toast.makeText(getActivity(), "FLING", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getActivity(), "FLING", Toast.LENGTH_SHORT).show();
+//                switchToLock();
+
             }
             return false;
         }

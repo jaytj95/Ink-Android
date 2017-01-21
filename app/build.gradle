@@ -47,7 +47,8 @@ dependencies {
         transitive = true;
     }
     compile 'com.android.volley:volley:1.0.0'
-    compile 'com.rm:freedrawview:1.0.0'
+    compile 'com.github.jaytj95:freedrawview:v1.0.2'
+    compile 'com.github.jaytj95:MaterialPatternllockView:v1.0.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

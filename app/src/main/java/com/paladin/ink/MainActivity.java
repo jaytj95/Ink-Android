@@ -118,6 +118,11 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
     }
 
     @Override
+    public void onSwitchToClock() {
+
+    }
+
+    @Override
     public void onUnlockSuccess() {
 
     }

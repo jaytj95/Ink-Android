@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fancy="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -60,6 +61,18 @@
             fancy:fb_textColor="#FFFFFF"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true" />
+
+        <com.amnix.materiallockview.MaterialLockView
+            android:id="@+id/pattern"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            fancy:LOCK_COLOR="#fff"
+            fancy:WRONG_COLOR="#ff0000"
+            fancy:CORRECT_COLOR="#00ff00"
+            android:layout_alignParentBottom="true"
+            android:layout_alignEnd="@+id/textDate"
+            android:layout_alignStart="@+id/textDate"
+            android:layout_marginBottom="16dp"/>
     </RelativeLayout>
 
 
