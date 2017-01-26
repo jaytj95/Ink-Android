@@ -249,7 +249,7 @@ public class ClockFragment extends Fragment {
         });
 
 
-        final GestureDetector gdt = new GestureDetector(new GestureListener());
+        final GestureDetector gdt = new GestureDetector(getActivity(), new GestureListener());
         receivedImg = (ImageView) rootView.findViewById(R.id.receivedImg);
         receivedImg.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -369,7 +369,6 @@ public class ClockFragment extends Fragment {
 //        listAdapter.add(user);
         listView.setAdapter(listAdapter);
 
-        getUsersPics();
 
         return rootView;
     }
@@ -419,7 +418,6 @@ public class ClockFragment extends Fragment {
                     picture = photoList.get(0);
                     Log.d("INKLOCK", picture.getId());
                     Picasso.with(getActivity()).load(picture.getUrl()).into(receivedImg);
-                    photoList.remove(0);
                 }
                 statusText.setText(statusText.getText()+ " " + photoList.size());
             }
@@ -511,7 +509,7 @@ public class ClockFragment extends Fragment {
                 drawingView.setVisibility(View.VISIBLE);
                 YoYo.with(Techniques.FadeIn).duration(ANIM_SPEED).playOn(drawingView);
                 mListener.onSwitchToDraw();
-                getUsersPics();
+//                getUsersPics();
             }
 
             @Override
@@ -608,7 +606,8 @@ public class ClockFragment extends Fragment {
             if(didFling) {
                 //unlock action
 //                switchToLock();
-                Toast.makeText(getActivity(), "Fling", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Updating...", Toast.LENGTH_SHORT).show();
+//                getUsersPics();
 
             }
             return false;

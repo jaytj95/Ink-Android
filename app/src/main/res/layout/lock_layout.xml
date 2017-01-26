@@ -68,7 +68,6 @@
             android:layout_width="350dp"
             android:layout_height="350dp"
             fancy:LOCK_COLOR="#fff"
-            android:visibility="gone"
             fancy:WRONG_COLOR="#ff0000"
             fancy:CORRECT_COLOR="#00ff00"
             android:layout_alignParentBottom="true"
