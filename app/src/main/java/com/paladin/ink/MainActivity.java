@@ -22,10 +22,6 @@ import android.widget.RelativeLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.nineoldandroids.animation.Animator;
 import com.squareup.picasso.Picasso;
 

@@ -11,6 +11,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,7 +38,7 @@ public class Api {
         return USER_ID;
     }
 
-    public void sendPicture(String fromId, String toId, String image64, OnPictureSent listener) {
+    public void sendPicture(String fromId, String toId, String image64, final OnPictureSent listener) {
         String url = API_ENDPOINT + "send";
         JSONObject param = new JSONObject();
         try {
@@ -49,16 +50,56 @@ public class Api {
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, param, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-
+                listener.onPictureSent(true);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                error.printStackTrace();
+                listener.onPictureSent(false);
             }
         });
+        requestQueue.add(request);
 
     }
+
+    public void getFriends(final OnFriendsLoaded listener) {
+        String url = API_ENDPOINT + "getFriends/";
+        JSONObject params = new JSONObject();
+        try {
+            params.put("userId", USER_ID);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        CustomRequest jsonObjectRequest = new CustomRequest(Request.Method.POST, url, params, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                ArrayList<User> list = new ArrayList<>();
+                try {
+                    for(int i = 0; i < response.length(); i++) {
+                        //TODO Change up for update
+                        //TODO Need to send NAME and ID
+                        String id = response.getString(i);
+                        if(id.equals(USER_ID)) {
+                            list.add(new User(id, "THIS IS YOU!"));
+                        } else {
+                            list.add(new User(id, "User: " + id));
+                        }
+                    }
+                    listener.onFriendsLoaded(list);
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                listener.onFriendsLoaded(null);
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
+    }
+
     public void getPendingPics(final OnPendingPicsLoaded listener) {
         String url = API_ENDPOINT + "photos/" + USER_ID;
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
@@ -94,7 +135,7 @@ public class Api {
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, null, null);
         requestQueue.add(req);
     }
-    public static void signUpUser(final Context c, String username, String pass, final OnApiResult listener) {
+    public static void signUpUser(final Context c, final String username, String pass, final OnApiResult listener) {
         String url = API_ENDPOINT + "register";
         JSONObject params = new JSONObject();
         try {
@@ -118,6 +159,7 @@ public class Api {
                     SharedPreferences.Editor prefsEditor = c.getSharedPreferences("inklocksharedprefs", MODE_PRIVATE).edit();
                     assert authKey != null;
                     prefsEditor.putString("auth_key", authKey);
+                    prefsEditor.putString("username", username);
                     prefsEditor.commit();
                     listener.onActionComplete(0);
                 } else {
@@ -132,7 +174,7 @@ public class Api {
         });
         queue.add(jsonObjectRequest);
     }
-    public static void loginUser(final Context c, String username, String pass, final OnApiResult listener) {
+    public static void loginUser(final Context c, final String username, String pass, final OnApiResult listener) {
         String url = API_ENDPOINT + "login";
         JSONObject params = new JSONObject();
         try {
@@ -157,6 +199,7 @@ public class Api {
                     SharedPreferences.Editor prefsEditor = c.getSharedPreferences("inklocksharedprefs", MODE_PRIVATE).edit();
                     assert authKey != null;
                     prefsEditor.putString("auth_key", authKey);
+                    prefsEditor.putString("username", username);
                     prefsEditor.commit();
                     listener.onActionComplete(0);
                 } else {
@@ -180,6 +223,9 @@ public class Api {
     }
     public interface OnPictureSent {
         void onPictureSent(boolean success);
+    }
+    public interface OnFriendsLoaded {
+        void onFriendsLoaded(ArrayList<User> friends);
     }
 
 }

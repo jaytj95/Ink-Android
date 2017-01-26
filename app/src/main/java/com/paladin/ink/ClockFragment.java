@@ -38,18 +38,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageMetadata;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.nineoldandroids.animation.Animator;
 import com.rm.freedrawview.FreeDrawView;
 import com.rm.freedrawview.PathDrawnListener;
@@ -110,13 +98,12 @@ public class ClockFragment extends Fragment {
     LineColorPicker colorPicker;
 
     TextClock clock;
-    TextView textDate;
+    TextView textDate, statusText;
 
     ListView listView;
     UserAdapter listAdapter;
     String userId;
     Api inkApi;
-    String[] pendingPics;
 
     MaterialLockView patternView;
 
@@ -129,10 +116,13 @@ public class ClockFragment extends Fragment {
         userId = preferences.getString("auth_key", null);
         assert userId != null;
         Log.d("INKLOCK", "Logged in as: " + userId);
+
         inkApi = new Api(getContext(), userId);
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_clock, container, false);
 
+        statusText = (TextView) rootView.findViewById(R.id.status_text);
+        statusText.setText(preferences.getString("username", "NOPE"));
         patternView = (MaterialLockView) rootView.findViewById(R.id.pattern);
         patternView.setOnPatternListener(new MaterialLockView.OnPatternListener() {
             @Override
@@ -264,6 +254,7 @@ public class ClockFragment extends Fragment {
         receivedImg.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                Log.d("INKLOCK", "touch");
                 if(event.getAction() == MotionEvent.ACTION_UP && dismiss) {
                     receivedImg.clearAnimation();
                     dismiss = false;
@@ -282,7 +273,6 @@ public class ClockFragment extends Fragment {
                         inkApi.deletePicture(picture.getId());
                         picture = null;
                     }
-                    Toast.makeText(getActivity(), "UP AFTER VIEW", Toast.LENGTH_SHORT).show();
                 } else {
                     gdt.onTouchEvent(event);
                 }
@@ -364,13 +354,30 @@ public class ClockFragment extends Fragment {
             }
         });
         listAdapter = new UserAdapter(getContext(), android.R.layout.simple_list_item_2);
-        User user = new User("58706219c798bb01c62d9c10", "jaytj95");
-        listAdapter.add(user);
+//        if(friendsCached) {
+//            addFriendsFromCache();
+//        } else {
+//            //ink api
+//        }
+        inkApi.getFriends(new Api.OnFriendsLoaded() {
+            @Override
+            public void onFriendsLoaded(ArrayList<User> friends) {
+                listAdapter.addAll(friends);
+            }
+        });
+
+//        listAdapter.add(user);
         listView.setAdapter(listAdapter);
 
         getUsersPics();
 
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getUsersPics();
     }
 
     private void sendToUser(final String uid) {
@@ -379,11 +386,19 @@ public class ClockFragment extends Fragment {
             @Override
             public void onDrawCreated(Bitmap bitmap) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 10, baos);
                 byte[] data = baos.toByteArray();
                 String encoded = Base64.encodeToString(data, Base64.DEFAULT);
 
-//                inkApi.sendPicture(userId, uid, encoded, new );
+                inkApi.sendPicture(userId, uid, encoded, new Api.OnPictureSent() {
+                    @Override
+                    public void onPictureSent(boolean success) {
+                        if(success) {
+                            switchToLock();
+                            inkView.undoAll();
+                        }
+                    }
+                });
             }
 
             @Override
@@ -406,6 +421,7 @@ public class ClockFragment extends Fragment {
                     Picasso.with(getActivity()).load(picture.getUrl()).into(receivedImg);
                     photoList.remove(0);
                 }
+                statusText.setText(statusText.getText()+ " " + photoList.size());
             }
         });
     }
@@ -568,7 +584,6 @@ public class ClockFragment extends Fragment {
                     }
                 }).playOn(clockLayout);
                 dismiss = true;
-                Toast.makeText(getActivity(), "LONG PRESS", Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -592,8 +607,8 @@ public class ClockFragment extends Fragment {
             }
             if(didFling) {
                 //unlock action
-//                Toast.makeText(getActivity(), "FLING", Toast.LENGTH_SHORT).show();
 //                switchToLock();
+                Toast.makeText(getActivity(), "Fling", Toast.LENGTH_SHORT).show();
 
             }
             return false;

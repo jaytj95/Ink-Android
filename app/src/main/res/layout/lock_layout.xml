@@ -9,6 +9,7 @@
 
 
 
+
     <ImageView
         android:id="@+id/receivedImg"
         android:layout_width="match_parent"
@@ -67,12 +68,22 @@
             android:layout_width="350dp"
             android:layout_height="350dp"
             fancy:LOCK_COLOR="#fff"
+            android:visibility="gone"
             fancy:WRONG_COLOR="#ff0000"
             fancy:CORRECT_COLOR="#00ff00"
             android:layout_alignParentBottom="true"
             android:layout_alignEnd="@+id/textDate"
             android:layout_alignStart="@+id/textDate"
             android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:text="TextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:textColor="@android:color/white"
+            android:id="@+id/status_text" />
     </RelativeLayout>
 
 
