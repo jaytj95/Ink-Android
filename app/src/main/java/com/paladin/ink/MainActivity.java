@@ -34,6 +34,9 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
     private CustomViewPager mPager;
     private PagerAdapter mPagerAdapter;
 
+    ClockFragment clockFragment;
+    UnlockFragment unlockFragment;
+
     Api inkApi;
 
     @Override
@@ -41,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         super.onCreate(savedInstanceState);
 
         //Set up our Lockscreen
+        clockFragment = new ClockFragment();
+        unlockFragment = new UnlockFragment();
+
         makeFullScreen();
         startService(new Intent(this, LockScreenService.class));
 
@@ -61,6 +67,30 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
         mPager.setCurrentItem(1);
+        mPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                if(position == 0) {
+                    clockFragment.setLayoutOpacity(positionOffset);
+                } else {
+                    clockFragment.setLayoutOpacity(1.0f);
+                }
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if(position == 1) {
+                    clockFragment.setLayoutOpacity(1.0f);
+                } else {
+                    clockFragment.setLayoutOpacity(0.0f);
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
 
         SharedPreferences prefs = getSharedPreferences("inklocksharedprefs", MODE_PRIVATE);
         if (!prefs.contains("auth_key")) {
@@ -90,7 +120,10 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
 
     @Override
     public void onBackPressed() {
-        return; //Do nothing!
+        if(clockFragment.getStatus() != ClockFragment.Mode.LOCK) {
+            clockFragment.switchToLock();
+            onSwitchToClock();
+        }
     }
 
     public void unlockScreen(View view) {
@@ -105,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
 
     @Override
     public void onSwitchToLock() {
-        mPager.setPagingEnabled(true);
+
     }
 
     @Override
@@ -115,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
 
     @Override
     public void onSwitchToClock() {
-
+        mPager.setPagingEnabled(true);
     }
 
     @Override
@@ -137,16 +170,20 @@ public class MainActivity extends AppCompatActivity implements UnlockFragment.On
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    return new ClockFragment();
-//                case 1:
-//                    return new ClockFragment();
+                    return unlockFragment;
+                case 1:
+                    return clockFragment;
             }
             return null;
         }
 
         @Override
         public int getCount() {
-            return 1;
+            return 2;
         }
+    }
+
+    public void setPagingEnabled(boolean enabled) {
+        mPager.setPagingEnabled(enabled);
     }
 }
